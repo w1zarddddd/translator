@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+{% block body %}
+
+<form class="container mt-4 position-relative" action="{{ url_for('index') }}" method="GET">
+    <button class="btn mt-4 position-absolute top-0 start-50 translate-middle">
+        <img class="hoverable" src="{{ url_for('static', filename='images/right-arrow.png') }}" alt="arrow" width="60"
+            height="60">
+    </button>
+
+    <div class="row pb-2">
+        <div class="col">
+            <h1 class="d-flex justify-content-center"><img src="{{ url_for('static', filename='images/logo.png') }}"
+                    width="45" height="45" class="mx-2 mt-1">Pascal</h1>
+            <textarea class="form-control fs-4 px-5 py-3" name="input" rows="12"
+                placeholder="Write your python code here" id="input"
+                onkeydown="if(event.keyCode===9){var v=this.value,s=this.selectionStart,e=this.selectionEnd;this.value=v.substring(0, s)+'\t'+v.substring(e);this.selectionStart=this.selectionEnd=s+1;return false;}">{{ input }}</textarea>
+        </div>
+        <div class="col">
+            <h1 class="d-flex justify-content-center"><img src="{{ url_for('static', filename='images/icon.png') }}"
+                    width="45" height="45" class="mx-2 mt-1">GO</h1>
+            <textarea class="form-control fs-4 px-5 py-3" rows="12"
+                placeholder="Output JavaScript code">{{ output }}</textarea>
+        </div>
+    </div>
+    <div class="row mb-5">
+        {% if output %}
+        <div class="col">
+            <h2 class="d-flex justify-content-center">SyntaxTree</h1>
+                <textarea class="form-control fs-5 px-5 py-3" rows="12">{{ syntaxTree }}</textarea>
+        </div>
+        <div class="col">
+            <h2 class="d-flex justify-content-center">Tokens</h1>
+                <textarea class="form-control fs-5 px-5 py-3" rows="12">{{ tokens }}</textarea>
+        </div>
+        {% endif %}
+    </div>
+</form>
+
+{% endblock body %}
