@@ -1,4 +1,4 @@
-from lexer import Token
+from lexer import *
 from nodes import *
 
 toGo = {
@@ -12,17 +12,13 @@ toGo = {
 
 MARGIN = '\t'
 
-
 class CodeGenerator:
     def __init__(self) -> None:
         self.output = ''
-        self.variables = set()
-        self.needs_fmt_import = False  # Для автоматического добавления import "fmt"
+        self.needs_fmt_import = False
 
-    def genVarDeclaration(self, node)   -> str:
-        decls = []
-        for var_name, var_type in node.declarations:
-            decls.append(f'var {var_name} {toGo.get(var_type, var_type)}')
+    def genVarDeclaration(self, node) -> str:
+        decls = [f'var {name} {toGo.get(type_, type_)}' for name, type_ in node.declarations]
         return '\n'.join(decls) + '\n'
 
     def genProcedureCall(self, node) -> str:
@@ -31,86 +27,67 @@ class CodeGenerator:
         return f'fmt.Println({args})'
 
     def genBinOperator(self, node) -> str:
-        if node.operator.type == 'ASSIGN':
-            return f'{self.genCode(node.leftNode)} {toGo[node.operator.value]} {self.genCode(node.rightNode)}'
-        return f'{self.genCode(node.leftNode)} {node.operator.value} {self.genCode(node.rightNode)}'
+        left = self.genCode(node.leftNode)
+        right = self.genCode(node.rightNode)
+        op = toGo.get(node.operator.value, node.operator.value)
+        return f'{left} {op} {right}'
 
-    def genBlock(self, node) -> str:
+    def genBlock(self, node, level) -> str:
         code = '{\n'
         for stmt in node.body:
-            code += self.genCode(stmt) + '\n'
-        return code + '}'
+            code += self.genCode(stmt, level + 1) + '\n'
+        return code + MARGIN * level + '}'
+
+    def genIfStatement(self, node, level) -> str:
+        condition = self.genCode(node.condition, level)
+        code = MARGIN * level + f'if {condition} {{\n'
+        for stmt in node.then_block.body:
+            code += self.genCode(stmt, level + 1) + '\n'
+        code += MARGIN * level + '}'
+        
+        if node.else_block:
+            code += ' else {\n'
+            for stmt in node.else_block.body:
+                code += self.genCode(stmt, level + 1) + '\n'
+            code += MARGIN * level + '}'
+        return code
+
+    def genWhileStatement(self, node, level) -> str:
+        condition = self.genCode(node.condition, level)
+        code = MARGIN * level + f'for {condition} \n'
+        for stmt in node.body.body:
+            code += self.genCode(stmt, level + 1) + '\n'
+        return code + MARGIN * level + '}'
 
     def genCode(self, node, level=0) -> str:
         if isinstance(node, VarDeclarationNode):
-            return self.genVarDeclaration(node)
-
-        elif isinstance(node, ProcedureCallNode):
-            return MARGIN * level + self.genProcedureCall(node)
+            return MARGIN * level + self.genVarDeclaration(node).strip()
 
         elif isinstance(node, BinOperatorNode):
-            return MARGIN * level + self.genBinOperator(node) + ';'
+            # Убираем точку с запятой для выражений внутри вызовов функций
+            return MARGIN * level + self.genBinOperator(node)  # <-- удалено ';'
 
-        elif isinstance(node, BlockNode):
-            return MARGIN * level + f'if {self.genCode(node.statement)} ' + self.genBlock(node)
+        elif isinstance(node, ProcedureCallNode):
+            return MARGIN * level + self.genProcedureCall(node) + ';'  # <-- добавляем ';' здесь
 
         elif isinstance(node, ValueNode):
             return node.value.value
 
-        elif isinstance(node, BlockNode) and node.operator == 'while':
-            condition = self.genCode(node.statement, level)
-            code = MARGIN * level + f'for {condition} {{\n'
-            for stmt in node.body:
-                code += self.genCode(stmt, level + 1) + '\n'
-            return code + MARGIN * level + '}'
+        elif isinstance(node, IfStatementNode):
+            return self.genIfStatement(node, level)
 
-        elif isinstance(node, BlockNode) and node.operator == 'if':
-            condition = self.genCode(node.statement, level)
-            code = MARGIN * level + f'if {condition} {{\n'
-            for stmt in node.body:
-                if isinstance(stmt, ElseNode):
-                    continue  # Обрабатываем ELSE отдельно
-                code += self.genCode(stmt, level + 1) + '\n'
-            code += MARGIN * level + '}'
+        elif isinstance(node, WhileStatementNode):
+            return self.genWhileStatement(node, level)
 
-            # Добавляем ELSE
-            for stmt in node.body:
-                if isinstance(stmt, ElseNode):
-                    code += ' else {\n'
-                    for else_stmt in stmt.body:
-                        code += self.genCode(else_stmt, level + 1) + '\n'
-                    code += MARGIN * level + '}'
-            return code
-
-        elif isinstance(node, ElseNode):
-            return ''  # Уже обработано в BlockNode
-
-    def genProcedureCall(self, node) -> str:
-        args = []
-        for arg in node.args:
-            if isinstance(arg, ValueNode) and arg.value.type == 'STRING':
-                # Замена ' на " и экранирование
-                arg_str = arg.value.value.replace("'", "\"")
-                args.append(f'"{arg_str[1:-1]}"')
-            else:
-                args.append(self.genCode(arg))
-        return f'fmt.Println({", ".join(args)})'
+        else:
+            return ''
 
     def generate(self, root) -> str:
-        # Добавляем заголовок пакета и импорты
         self.output = 'package main\n\n'
-        if self.needs_fmt_import:
-            self.output += 'import "fmt"\n\n'
+        self.output += 'import "fmt"\n\n'
 
-         # Генерируем функцию main
-            self.output += 'func main() {\n'
+        self.output += 'func main() {\n'
         for node in root.codeStrings:
-            self.output += self.genCode(node, level=1) + '\n'
-            self.output += '}'
-        return self.output
-
-        # Генерируем основной код
-        for node in root.codeStrings:
-            self.output += self.genCode(node) + '\n'
-
+            self.output += self.genCode(node, 1) + '\n'
+        self.output += '}'
         return self.output
