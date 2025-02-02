@@ -11,7 +11,7 @@ TOKEN_SPECIFICATION = [
     ('PROGRAM',      r'program\b'),
     ('VAR',          r'var\b'),
     ('INTEGER',      r'integer\b'),
-    ('STRING_TYPE',  r'string\b'),
+    ('STRING',       r'string\b'),  # Исправлено: STRING_TYPE → STRING
     ('BEGIN',        r'begin\b'),
     ('END',          r'end\b'),
     ('IF',           r'if\b'),
@@ -28,10 +28,10 @@ TOKEN_SPECIFICATION = [
     ('RPAR',         r'\)'),
     ('OPERATOR',     r'[+\-*/]|==|!=|<=|>=|<|>|and|or'),
     ('NUMBER',       r'-?\d+'),
-    ('STRING',       r"'.*?'"),
-    ('IDENTIFIER',   r'[a-zA-Z_][a-zA-Z0-9_]*'),  # Идентификаторы Pascal
+    ('STRING_LIT',   r"'.*?'"),     # Исправлено: строковые литералы
+    ('IDENTIFIER',   r'[a-zA-Z_][a-zA-Z0-9_]*'),
     ('SKIP',         r'[\s\t\n\r]+'),
-    ('DOT', r'\.'),
+    ('DOT',          r'\.'),
     ('MISMATCH',     r'.'),
 ]
 
@@ -50,13 +50,11 @@ def tokenize(code: str) -> list[Token]:
             continue
         elif kind == 'MISMATCH':
             raise SyntaxError(f"Недопустимый символ '{value}' на строке {line_num}")
-        elif kind == 'NEWLINE':
-            line_start = mo.end()
-            line_num += 1
+        elif kind == 'STRING_LIT':  # Исправлено
+            tokens.append(Token('STRING', value, line_num, column))
+        elif kind == 'IDENTIFIER' and value.lower() in {'package', 'import', 'func'}:
+            raise NameError(f"Использование зарезервированного слова Go: '{value}'")
         else:
-            # Проверка на зарезервированные слова Go (например, 'package', 'import')
-            if kind == 'IDENTIFIER' and value.lower() in {'package', 'import', 'func'}:
-                raise NameError(f"Использование зарезервированного слова Go: '{value}'")
             tokens.append(Token(kind, value, line_num, column))
 
     return tokens
