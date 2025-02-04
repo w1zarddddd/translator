@@ -1,39 +1,71 @@
 {% extends 'base.html' %}
 {% block body %}
 
-<form class="container mt-4 position-relative" action="{{ url_for('index') }}" method="GET">
-    <button class="btn mt-4 position-absolute top-0 start-50 translate-middle">
-        <img class="hoverable" src="{{ url_for('static', filename='images/right-arrow.png') }}" alt="arrow" width="60"
-            height="60">
-    </button>
+<div class="container my-5">
+    <h1 class="text-center mb-4">Pascal-to-Go Translator</h1>
+    <form action="{{ url_for('index') }}" method="GET">
+        <div class="row g-4">
+            
+            <div class="col-md-6">
+                <div class="card h-100 shadow">
+                    <div class="card-header bg-primary text-white">
+                        <h2 class="card-title mb-0">Pascal Code</h2>
+                    </div>
+                    <div class="card-body">
+                        <textarea class="form-control fs-5" name="input" rows="12"
+                            placeholder="Write your Pascal code here" id="input"
+                            onkeydown="if(event.keyCode===9){var v=this.value,s=this.selectionStart,e=this.selectionEnd;this.value=v.substring(0, s)+'\t'+v.substring(e);this.selectionStart=this.selectionEnd=s+1;return false;}">{{ input }}</textarea>
+                    </div>
+                </div>
+            </div>
 
-    <div class="row pb-2">
-        <div class="col">
-            <h1 class="d-flex justify-content-center"><img src="{{ url_for('static', filename='images/logo.png') }}"
-                    width="45" height="45" class="mx-2 mt-1">Pascal</h1>
-            <textarea class="form-control fs-4 px-5 py-3" name="input" rows="12"
-                placeholder="Write your python code here" id="input"
-                onkeydown="if(event.keyCode===9){var v=this.value,s=this.selectionStart,e=this.selectionEnd;this.value=v.substring(0, s)+'\t'+v.substring(e);this.selectionStart=this.selectionEnd=s+1;return false;}">{{ input }}</textarea>
+            
+            <div class="col-md-6">
+                <div class="card h-100 shadow">
+                    <div class="card-header bg-success text-white">
+                        <h2 class="card-title mb-0">Go Code</h2>
+                    </div>
+                    <div class="card-body">
+                        <textarea class="form-control fs-5" rows="12" readonly>{{ output }}</textarea>
+                    </div>
+                </div>
+            </div>
         </div>
-        <div class="col">
-            <h1 class="d-flex justify-content-center"><img src="{{ url_for('static', filename='images/icon.png') }}"
-                    width="45" height="45" class="mx-2 mt-1">GO</h1>
-            <textarea class="form-control fs-4 px-5 py-3" rows="12"
-                placeholder="Output JavaScript code">{{ output }}</textarea>
+
+       
+        <div class="text-center mt-4">
+            <button type="submit" class="btn btn-lg btn-primary">
+                <i class="bi bi-arrow-right"></i> Translate
+            </button>
+        </div>
+    </form>
+
+   
+    {% if output %}
+    <div class="row g-4 mt-4">
+        <div class="col-md-6">
+            <div class="card shadow">
+                <div class="card-header bg-info text-white">
+                    <h2 class="card-title mb-0">Syntax Tree</h2>
+                </div>
+                <div class="card-body">
+                    <textarea class="form-control fs-5" rows="8" readonly>{{ syntaxTree }}</textarea>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card shadow">
+                <div class="card-header bg-warning text-dark">
+                    <h2 class="card-title mb-0">Tokens</h2>
+                </div>
+                <div class="card-body">
+                    <textarea class="form-control fs-5" rows="8" readonly>{{ tokens }}</textarea>
+                </div>
+            </div>
         </div>
     </div>
-    <div class="row mb-5">
-        {% if output %}
-        <div class="col">
-            <h2 class="d-flex justify-content-center">SyntaxTree</h1>
-                <textarea class="form-control fs-5 px-5 py-3" rows="12">{{ syntaxTree }}</textarea>
-        </div>
-        <div class="col">
-            <h2 class="d-flex justify-content-center">Tokens</h1>
-                <textarea class="form-control fs-5 px-5 py-3" rows="12">{{ tokens }}</textarea>
-        </div>
-        {% endif %}
-    </div>
-</form>
+    {% endif %}
+</div>
 
 {% endblock body %}

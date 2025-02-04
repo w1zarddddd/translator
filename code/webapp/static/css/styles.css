@@ -1,0 +1,39 @@
+/* Основные стили */
+body {
+    font-family: 'Arial', sans-serif;
+}
+
+/* Стили для карточек */
+.card {
+    border: none;
+    border-radius: 10px;
+}
+
+.card-header {
+    border-radius: 10px 10px 0 0;
+}
+
+/* Стили для текстовых областей */
+textarea {
+    resize: none;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    padding: 10px;
+}
+
+/* Стили для кнопки */
+.btn-primary {
+    background-color: #007bff;
+    border: none;
+    padding: 10px 20px;
+    font-size: 1.2rem;
+}
+
+.btn-primary:hover {
+    background-color: #0056b3;
+}
+
+/* Стили для футера */
+footer {
+    margin-top: 50px;
+}
